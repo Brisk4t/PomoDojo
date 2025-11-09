@@ -7,6 +7,14 @@ function App() {
   const [input, setInput] = useState('');
   const [filter, setFilter] = useState('all');
   const [focusData, setFocusData] = useState({ attention: 0, source: 'Simulated' });
+  const [spriteBase, setSpriteBase] = useState('');
+  const [spriteOverlay, setSpriteOverlay] = useState('');
+
+  useEffect(() => {
+    setSpriteBase(chrome.runtime.getURL('images/study_mode/sprite_study.gif'));
+    setSpriteOverlay(chrome.runtime.getURL('images/study_mode/star_glasses.gif'));
+  }, []);
+
 
   // Load todos on mount
   useEffect(() => {
@@ -76,10 +84,13 @@ function App() {
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>Focus Todo</h1>
-        <img src="sprite_1.gif" alt="Sprite" className="sprite" />
-      </div>
+        <div className="sprite-container">
+            <img src={spriteBase} alt="Base Sprite" className="sprite base" />
+            <img src={spriteOverlay} alt="Overlay Sprite" className="sprite overlay" />
+        </div>
+        <div className="header">
+          <h1>Focus Todo</h1>
+        </div>
 
       <div className="stats">
         <div className="stat-item">
@@ -91,8 +102,8 @@ function App() {
           <div className="value">{doingTodo ? doingTodo.text.substring(0, 25) : 'None'}</div>
         </div>
         <div className="stat-item">
-          <div className="label">Data Source</div>
-          <div className="value">{focusData.source}</div>
+          <div className="label">Level</div>
+          <div className="value">{focusData.level}</div>
         </div>
       </div>
 

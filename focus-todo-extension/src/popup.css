@@ -39,13 +39,24 @@ body {
   margin: 0;
 }
 
+.sprite-container {
+  position: relative;
+  margin: 8px auto;   /* centers horizontally without changing layout */
+  width: 200px;  /* or whatever size you want */
+  height: 200px;
+}
+
 .sprite {
-  width: 64px;
-  height: 64px;
-  cursor: pointer;
-  animation: idle 2s ease-in-out infinite;
-  object-fit: contain;
-  image-rendering: crisp-edges;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sprite.overlay {
+  opacity: 1; /* optional */
+  pointer-events: none; /* ensures it doesn't block clicks */
 }
 
 @keyframes idle {
