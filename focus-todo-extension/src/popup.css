@@ -39,24 +39,33 @@ body {
   margin: 0;
 }
 
+.sprite-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
 .sprite-container {
   position: relative;
-  margin: 8px auto;   /* centers horizontally without changing layout */
-  width: 200px;  /* or whatever size you want */
+  width: 200px;
   height: 200px;
+  margin: 0 10px; /* spacing for buttons */
 }
 
 .sprite {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* center inside container */
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .sprite.overlay {
-  opacity: 1; /* optional */
-  pointer-events: none; /* ensures it doesn't block clicks */
+  pointer-events: none; /* overlay doesn’t block clicks */
+  opacity: 1;
 }
 
 @keyframes idle {

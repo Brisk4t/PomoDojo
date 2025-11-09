@@ -9,6 +9,22 @@ function App() {
   const [focusData, setFocusData] = useState({ attention: 0, source: 'Simulated' });
   const [spriteBase, setSpriteBase] = useState('');
   const [spriteOverlay, setSpriteOverlay] = useState('');
+  const overlays = [
+    chrome.runtime.getURL('images/study_mode/star_glasses.gif'),
+    chrome.runtime.getURL('images/study_mode/heart_glasses.gif'),
+    chrome.runtime.getURL('images/study_mode/blue_glasses.gif')
+  ];
+  const [overlayIndex, setOverlayIndex] = useState(0);
+
+  const prevOverlay = () => {
+    setOverlayIndex((prev) => (prev - 1 + overlays.length) % overlays.length);
+    setSpriteOverlay(overlays[(overlayIndex - 1 + overlays.length) % overlays.length]);
+  };
+
+  const nextOverlay = () => {
+    setOverlayIndex((prev) => (prev + 1) % overlays.length);
+    setSpriteOverlay(overlays[(overlayIndex + 1) % overlays.length]);
+  };
 
   useEffect(() => {
     setSpriteBase(chrome.runtime.getURL('images/study_mode/sprite_study.gif'));
@@ -28,8 +44,8 @@ function App() {
     chrome.storage.local.set({ todos });
   }, [todos]);
 
+  // Load latest focus data on mount
   useEffect(() => {
-    // Load latest focus data on mount
     chrome.runtime.sendMessage({ action: 'getLatestFocusData' }, (response) => {
       if (response?.data) setFocusData(response.data);
     });
@@ -46,7 +62,7 @@ function App() {
     return () => chrome.runtime.onMessage.removeListener(handler);
   }, []);
 
-
+  // Add new todo
   const addTodo = () => {
     if (!input.trim()) return;
     const todo = {
@@ -60,6 +76,7 @@ function App() {
     setInput('');
   };
 
+  // Update todo state
   const updateTodo = (id, newState) => {
     const todo = todos.find(t => t.id === id);
     if (!todo) return;
@@ -73,6 +90,7 @@ function App() {
     setTodos(todos.map(t => t.id === id ? { ...t, state: newState } : t));
   };
 
+  // Delete todo
   const deleteTodo = (id) => {
     setTodos(todos.filter(t => t.id !== id));
   };
@@ -84,12 +102,13 @@ function App() {
 
   return (
     <div className="container">
-        <div className="sprite-container">
-            <img src={spriteBase} alt="Base Sprite" className="sprite base" />
+        <div className="sprite-wrapper">
+          <button onClick={prevOverlay} className="sprite-btn">◀</button>
+          <div className="sprite-container">
+            <img src={spriteBase} alt="Base Sprite" className="sprite" />
             <img src={spriteOverlay} alt="Overlay Sprite" className="sprite overlay" />
-        </div>
-        <div className="header">
-          <h1>Focus Todo</h1>
+          </div>
+          <button onClick={nextOverlay} className="sprite-btn">▶</button>
         </div>
 
       <div className="stats">
