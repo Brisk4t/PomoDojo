@@ -1,0 +1,36 @@
+body {
+    background-image: url("background.png");
+    width: 500px;
+    height: 500px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: 90%;
+    
+}
+
+div {
+    max-width: 500px;
+    max-height: 700px;
+
+}
+
+h1 {
+    text-align: center;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    background-color: darksalmon;
+    border-style: outset;
+    border-width: 5px;
+    border-color: rgb(120, 79, 73);
+    border-radius: 10px;
+    padding: 10px 10px 10px;
+    letter-spacing: 2px;
+
+}
+
+#panda-img {
+    width: 400px;
+    height: 400px;
+    background-image: url('study-mode-idle.gif');
+    padding-left: 50px;
+    padding-top: 100px;
+}
