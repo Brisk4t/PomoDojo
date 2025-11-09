@@ -97,6 +97,7 @@ def stream_focus(callback: Callable[[Dict[str, Any]], None],
                     }
                 }
             
+            print(data)
             callback(data)
             last_update = time.time()
 
