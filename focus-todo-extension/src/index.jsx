@@ -20,16 +20,24 @@ function App() {
     chrome.storage.local.set({ todos });
   }, [todos]);
 
-  // Listen for focus updates
   useEffect(() => {
-    const handler = (request, sender, sendResponse) => {
+    // Load latest focus data on mount
+    chrome.runtime.sendMessage({ action: 'getLatestFocusData' }, (response) => {
+      if (response?.data) setFocusData(response.data);
+    });
+
+    // Live updates from background
+    const handler = (request) => {
       if (request.action === 'updateFocusData') {
+        console.log('Received focus data:', request.data);
         setFocusData(request.data);
       }
     };
+
     chrome.runtime.onMessage.addListener(handler);
     return () => chrome.runtime.onMessage.removeListener(handler);
   }, []);
+
 
   const addTodo = () => {
     if (!input.trim()) return;
@@ -142,7 +150,19 @@ function App() {
 
       <div className="footer">
         <button className="btn-secondary">▶ Start Tracking</button>
-        <button className="btn-secondary">🧠 Muse S</button>
+        <button
+          className="btn-secondary"
+          onClick={() => {
+            chrome.runtime.sendMessage({ action: 'connectMuse' }, (response) => {
+              if (response?.success) {
+                console.log('Connecting to Muse WebSocket...');
+              }
+            });
+          }}
+        >
+          🧠 Muse S
+        </button>
+
       </div>
     </div>
   );

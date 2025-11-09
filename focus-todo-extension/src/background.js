@@ -144,166 +144,115 @@ function getAttentionLevel(score) {
   return 'Very Distracted';
 }
 
-// Muse S BLE Integration
+// Muse S via WebSocket Integration
 const MUSE_S = {
   isConnected: false,
-  device: null,
-  server: null,
-  characteristics: {},
+  socket: null,
 
-  bandpower: {
-    delta: 0,
-    theta: 0,
-    alpha: 0,
-    beta: 0,
-    gamma: 0
-  },
+  connect: function() {
+    if (this.isConnected) return;
 
-  // Muse S GATT UUIDs
-  MUSE_SERVICE_UUID: '0000fe8d-0000-1000-8000-00805f9b34fb',
-  CONTROL_CHARACTERISTIC: '273e0003-4c4d-454d-96be-f03bac821358',
-  EEG_CHARACTERISTICS: {
-    tp9: '273e0001-4c4d-454d-96be-f03bac821358',
-    af7: '273e0002-4c4d-454d-96be-f03bac821358',
-    af8: '273e0003-4c4d-454d-96be-f03bac821358',
-    tp10: '273e0004-4c4d-454d-96be-f03bac821358'
-  },
-  ALPHA_RELATIVE_UUID: '273e000d-4c4d-454d-96be-f03bac821358',
-  BETA_RELATIVE_UUID: '273e000e-4c4d-454d-96be-f03bac821358',
+    this.socket = new WebSocket('ws://localhost:6969');
 
-  connect: async function() {
-    try {
-      console.log('Scanning for Muse S device...');
-
-      this.device = await navigator.bluetooth.requestDevice({
-        filters: [{ namePrefix: 'Muse' }],
-        optionalServices: [
-          this.MUSE_SERVICE_UUID,
-          '0000180a-0000-1000-8000-00805f9b34fb' // Device info
-        ]
-      });
-
-      console.log('Muse S device selected:', this.device.name);
-
-      this.device.addEventListener('gattserverdisconnected', () => {
-        console.log('Muse S disconnected');
-        this.isConnected = false;
-        notifyMuseStatus(false);
-      });
-
-      this.server = await this.device.gatt.connect();
-      console.log('GATT server connected');
-
-      const service = await this.server.getPrimaryService(this.MUSE_SERVICE_UUID);
-
-      // Get bandpower characteristics (easiest to use for attention)
-      try {
-        const alphaCh = await service.getCharacteristic(this.ALPHA_RELATIVE_UUID);
-        const betaCh = await service.getCharacteristic(this.BETA_RELATIVE_UUID);
-
-        // Start notifications
-        await alphaCh.startNotifications();
-        await betaCh.startNotifications();
-
-        alphaCh.addEventListener('characteristicvaluechanged', (event) => {
-          this.parseAlphaData(event.target.value);
-        });
-
-        betaCh.addEventListener('characteristicvaluechanged', (event) => {
-          this.parseBetaData(event.target.value);
-        });
-
-        console.log('Muse S connected and listening for EEG data');
-        this.isConnected = true;
-        notifyMuseStatus(true);
-        return true;
-      } catch (e) {
-        console.log('Bandpower characteristics not found, trying raw EEG...');
-        // Fallback to raw EEG data parsing
-        return this.connectRawEEG(service);
-      }
-    } catch (error) {
-      console.error('Failed to connect to Muse S:', error);
-      this.isConnected = false;
-      return false;
-    }
-  },
-
-  connectRawEEG: async function(service) {
-    try {
-      // Get raw EEG characteristics
-      for (const [channel, uuid] of Object.entries(this.EEG_CHARACTERISTICS)) {
-        try {
-          const ch = await service.getCharacteristic(uuid);
-          await ch.startNotifications();
-          ch.addEventListener('characteristicvaluechanged', (event) => {
-            this.parseEEGData(event.target.value, channel);
-          });
-          console.log(`Listening to ${channel} channel`);
-        } catch (e) {
-          console.log(`Channel ${channel} not available`);
-        }
-      }
+    this.socket.addEventListener('open', () => {
+      console.log('Connected to local Muse WebSocket');
       this.isConnected = true;
       notifyMuseStatus(true);
-      return true;
-    } catch (error) {
-      console.error('Failed to connect to raw EEG:', error);
-      return false;
-    }
-  },
+    });
 
-  parseAlphaData: function(dataView) {
-    // Alpha relative is at bytes 0-3 (4 channels)
-    if (dataView.byteLength >= 16) {
-      const alpha = dataView.getFloat32(0, true); // Channel 1 alpha
-      this.bandpower.alpha = alpha;
-    }
-  },
+    this.socket.addEventListener('message', (event) => {
+      try {
+        const msg = JSON.parse(event.data);
 
-  parseBetaData: function(dataView) {
-    // Beta relative is at bytes 0-3
-    if (dataView.byteLength >= 16) {
-      const beta = dataView.getFloat32(0, true);
-      this.bandpower.beta = beta;
-    }
-  },
+        if (msg.status === 'calibrating') {
+          focusData = {
+            level: 'Calibrating',
+            attention: 0,
+            fps: 30,
+            progress: msg.progress,
+            total: msg.total,
+            timestamp: Date.now(),
+            source: 'WebSocket Muse'
+          };
+        } else if (msg.status === 'focus') {
+          // Map focus value to attention level
+          let level;
+          if (msg.focus >= 80) level = 'Very Focused';
+          else if (msg.focus >= 60) level = 'Focused';
+          else if (msg.focus >= 40) level = 'Neutral';
+          else if (msg.focus >= 20) level = 'Distracted';
+          else level = 'Very Distracted';
 
-  parseEEGData: function(dataView, channel) {
-    // Raw EEG data - simplified for demo
-    if (dataView.byteLength >= 4) {
-      const value = Math.abs(dataView.getFloat32(0, true));
-      // Rough estimation of attention based on signal strength
-      if (value > 0) {
-        this.bandpower.beta = Math.min(100, value / 100);
+          focusData = {
+            level: level,
+            attention: msg.focus,
+            engagement: msg.engagement,
+            baseline: msg.baseline,
+            fps: 30,
+            timestamp: msg.timestamp,
+            source: 'WebSocket Muse'
+          };
+        }
+
+        // Update icon badge
+        updateIconBadge();
+        console.log('Focus Data:', focusData);
+        // Send to popup if open
+        chrome.runtime.sendMessage({ action: 'updateFocusData', data: focusData });
+      
+      } catch (e) {
+        console.warn('Invalid data from WebSocket', e);
       }
-    }
+    });
+
+    this.socket.addEventListener('close', () => {
+      console.log('Muse WebSocket disconnected');
+      this.isConnected = false;
+      notifyMuseStatus(false);
+    });
+
+    this.socket.addEventListener('error', (err) => {
+      console.error('Muse WebSocket error', err);
+      this.isConnected = false;
+      notifyMuseStatus(false);
+    });
   },
 
-  disconnect: async function() {
-    if (this.device && this.device.gatt.connected) {
-      await this.device.gatt.disconnect();
+  disconnect: function() {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+      this.isConnected = false;
+      notifyMuseStatus(false);
     }
-    this.isConnected = false;
-    notifyMuseStatus(false);
   },
 
   getAttention: function() {
-    // Calculate attention from EEG bandpower
-    // Higher beta/alpha ratio indicates focus/attention
-    const betaAlphaRatio = (this.bandpower.beta || 0) / (Math.max(this.bandpower.alpha, 0.1) || 0.1);
-    const attention = Math.min(100, Math.max(0, betaAlphaRatio * 25)); // Scale to 0-100
-    return Math.round(attention);
+    return focusData.attention || 0;
   },
 
   getStatus: function() {
     return {
       isConnected: this.isConnected,
-      bandpower: this.bandpower,
-      attention: this.getAttention()
+      focusData: focusData
     };
   }
 };
+
+// Listen for popup messages
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'connectMuse') {
+    MUSE_S.connect();
+    sendResponse({ success: true });
+  }
+  if (request.action === 'getLatestFocusData') {
+    chrome.storage.local.get(['latestFocusData'], (result) => {
+      sendResponse({ data: result.latestFocusData || focusData });
+    });
+    return true; // keep sendResponse alive for async
+  }
+});
+
 
 // Notify popup of Muse status
 function notifyMuseStatus(isConnected) {
