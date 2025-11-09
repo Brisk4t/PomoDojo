@@ -25,11 +25,11 @@
     "type": "module"
   },
   "icons": {
-    "128": "images/icon.svg"
+    "128": "images/sprite_1.png"
   },
   "web_accessible_resources": [
     {
-      "resources": ["sprite_1.gif", "content.js"],
+      "resources": ["sprite_1.gif", "content.js", "images/*.png", "images/*.gif"],
       "matches": ["<all_urls>"]
     }
   ]

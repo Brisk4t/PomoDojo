@@ -116,11 +116,36 @@ function stopAttentionTracking() {
 }
 
 function getAttentionLevel(value) {
-  if (value >= 80) return 'Deep Focus';
-  if (value >= 60) return 'Focused';
-  if (value >= 40) return 'Neutral';
-  if (value >= 20) return 'Distracted';
-  return 'Very Distracted';
+  let state;
+
+  if (value >= 80){ 
+    state = 'Deep Focus';
+  }
+  
+  if (value >= 60){ 
+    state ='Focused';
+    chrome.action.setIcon({
+      path: spriteBase
+    });
+  }
+
+  if (value >= 40){ 
+    state ='Neutral';
+    // chrome.action.setIcon({
+    //   path: chrome.runtime.getURL('images/sprite_1.png')
+    // });
+  }
+
+  if (value >= 20){
+    state ='Distracted';
+    // chrome.action.setIcon({
+    //   path: chrome.runtime.getURL('images/sprite_1.png')
+    // });
+  }
+
+  state ='Very Distracted';
+
+  return state
 }
 
 // Periodic attention check
