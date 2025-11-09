@@ -9,23 +9,42 @@ function App() {
   const [focusData, setFocusData] = useState({ attention: 0, source: 'Simulated' });
   const [spriteBase, setSpriteBase] = useState('');
   const [spriteOverlay, setSpriteOverlay] = useState('');
+  const [overlayIndex, setOverlayIndex] = useState(0);
+  const [spriteIndex, setSpriteIndex] = useState(0);
+
   const overlays = [
     chrome.runtime.getURL('images/study_mode/star_glasses.gif'),
     chrome.runtime.getURL('images/study_mode/heart_glasses.gif'),
     chrome.runtime.getURL('images/study_mode/blue_glasses.gif')
   ];
-  const [overlayIndex, setOverlayIndex] = useState(0);
 
+  const stateSprites = {
+    EATING: chrome.runtime.getURL('images/study_mode/eating.gif'),
+    STUDYING: chrome.runtime.getURL('images/study_mode/study.gif'),
+    SLEEPING: chrome.runtime.getURL('images/study_mode/sleeping.gif'),
+  };
+
+  const changeState = (state) => {
+    if (stateSprites[state]) {
+      setCurrentState(state);
+      setSpriteOverlay(stateSprites[state]);
+    }
+  };
+
+  // Previous overlay
   const prevOverlay = () => {
     setOverlayIndex((prev) => (prev - 1 + overlays.length) % overlays.length);
     setSpriteOverlay(overlays[(overlayIndex - 1 + overlays.length) % overlays.length]);
   };
 
+  // Next overlay
   const nextOverlay = () => {
     setOverlayIndex((prev) => (prev + 1) % overlays.length);
     setSpriteOverlay(overlays[(overlayIndex + 1) % overlays.length]);
   };
 
+
+  // Load sprites on mount
   useEffect(() => {
     setSpriteBase(chrome.runtime.getURL('images/study_mode/sprite_study.gif'));
     setSpriteOverlay(chrome.runtime.getURL('images/study_mode/star_glasses.gif'));
@@ -186,6 +205,9 @@ function App() {
             chrome.runtime.sendMessage({ action: 'connectMuse' }, (response) => {
               if (response?.success) {
                 console.log('Connecting to Muse WebSocket...');
+              }
+              else{
+                console.error("Connection failed", response.error);
               }
             });
           }}

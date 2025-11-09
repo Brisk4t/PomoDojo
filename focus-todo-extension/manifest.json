@@ -8,7 +8,10 @@
     "tabs",
     "scripting",
     "bluetooth",
-    "bluetoothPrivate"
+    "bluetoothPrivate",
+    "notifications",
+    "alarms",
+    "action"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -18,7 +21,8 @@
     "default_title": "Focus Todo"
   },
   "background": {
-    "service_worker": "dist/background.js"
+    "service_worker": "dist/background.js",
+    "type": "module"
   },
   "icons": {
     "128": "images/icon.svg"
