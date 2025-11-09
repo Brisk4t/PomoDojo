@@ -15,45 +15,47 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.action.setBadgeBackgroundColor({ color: '#d0c8d8' });
 });
 
-// Message handler
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'startTracking') {
-    currentTodoId = request.todoId;
-    sendResponse({ success: true });
-  }
-
-  if (request.action === 'stopTracking') {
-    currentTodoId = null;
-    sendResponse({ success: true });
-  }
-
-  if (request.action === 'startAttentionTracking') {
-    startAttentionTracking();
-    sendResponse({ success: true });
-  }
-
-  if (request.action === 'stopAttentionTracking') {
-    stopAttentionTracking();
-    sendResponse({ success: true });
-  }
-
-  if (request.action === 'getTrackingStatus') {
-    sendResponse({ isTracking });
-  }
-
-  if (request.action === 'setMuseData') {
-    // Popup sends us Muse data
-    MUSE_S.bandpower = request.bandpower;
-    sendResponse({ success: true });
-  }
-
-  if (request.action === 'setMuseConnected') {
-    MUSE_S.isConnected = request.isConnected;
-    sendResponse({ success: true });
-  }
-
-  if (request.action === 'getMuseStatus') {
-    sendResponse(MUSE_S.getStatus());
+  switch (request.action) {
+    case 'startTracking':
+      currentTodoId = request.todoId;
+      sendResponse({ success: true });
+      break;
+    case 'stopTracking':
+      currentTodoId = null;
+      sendResponse({ success: true });
+      break;
+    case 'startAttentionTracking':
+      startAttentionTracking();
+      sendResponse({ success: true });
+      break;
+    case 'stopAttentionTracking':
+      stopAttentionTracking();
+      sendResponse({ success: true });
+      break;
+    case 'getTrackingStatus':
+      sendResponse({ isTracking });
+      break;
+    case 'setMuseData':
+      MUSE_S.bandpower = request.bandpower;
+      sendResponse({ success: true });
+      break;
+    case 'setMuseConnected':
+      MUSE_S.isConnected = request.isConnected;
+      sendResponse({ success: true });
+      break;
+    case 'getMuseStatus':
+      sendResponse(MUSE_S.getStatus());
+      break;
+    case 'connectMuse':
+      MUSE_S.connect();
+      sendResponse({ success: true });
+      break;
+    case 'getLatestFocusData':
+      chrome.storage.local.get(['latestFocusData'], (result) => {
+        sendResponse({ data: result.latestFocusData || focusData });
+      });
+      return true; // keep alive
   }
 });
 
@@ -110,9 +112,7 @@ function runAttentionDetection() {
     chrome.runtime.sendMessage({
       action: 'updateFocusData',
       data: focusData
-    }).catch(() => {
-      // Popup not open, ignore
-    });
+    })
 
     // Save to current todo
     if (currentTodoId) {
@@ -196,7 +196,7 @@ const MUSE_S = {
 
         // Update icon badge
         updateIconBadge();
-        console.log('Focus Data:', focusData);
+        console.log('Focus Data:', event.data);
         // Send to popup if open
         chrome.runtime.sendMessage({ action: 'updateFocusData', data: focusData });
       
@@ -238,20 +238,6 @@ const MUSE_S = {
     };
   }
 };
-
-// Listen for popup messages
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'connectMuse') {
-    MUSE_S.connect();
-    sendResponse({ success: true });
-  }
-  if (request.action === 'getLatestFocusData') {
-    chrome.storage.local.get(['latestFocusData'], (result) => {
-      sendResponse({ data: result.latestFocusData || focusData });
-    });
-    return true; // keep sendResponse alive for async
-  }
-});
 
 
 // Notify popup of Muse status

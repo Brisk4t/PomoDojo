@@ -81,30 +81,27 @@ def start_muse_stream(muse_name: Optional[str] = None):
     return stream_thread
 
 
-def focus_stream_thread():
+def focus_stream_thread(main_loop):
     """Run focus stream in separate thread"""
-    # Convert async broadcast to sync using event loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
     def callback(data):
-        loop.create_task(broadcast(data))
-    
+        # Schedule broadcast() safely on the main loop
+        asyncio.run_coroutine_threadsafe(broadcast(data), main_loop)
+
     stream_focus(callback)
 
 async def main():
-    # Start WebSocket server
     port = 6969
     base_url = "localhost"
+
     async with websockets.serve(register, base_url, port):
         print(f"WebSocket server running at ws://{base_url}:{port}")
-        
-        # Run focus stream in separate thread
-        thread = Thread(target=focus_stream_thread, daemon=True)
+
+        # Pass the main event loop to the thread
+        loop = asyncio.get_event_loop()
+        thread = Thread(target=focus_stream_thread, args=(loop,), daemon=True)
         thread.start()
-        
-        # Keep server running
-        await asyncio.Future()
+
+        await asyncio.Future()  # Keep server alive
 
 if __name__ == "__main__":
     
