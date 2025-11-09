@@ -3,3 +3,7 @@ __pycache__
 *.pyc
 .env
 .env.*
+node_modules/
+dist/
+npm-debug.log
+.DS_Store

@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Focus Todo with Attention Tracking",
+  "version": "1.0.0",
+  "description": "Todo app with computer vision attention tracking and Muse S integration",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "bluetooth",
+    "bluetoothPrivate"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Focus Todo"
+  },
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+  "icons": {
+    "128": "images/icon.svg"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["sprite_1.gif", "content.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
