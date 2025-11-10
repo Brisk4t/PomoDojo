@@ -9,51 +9,32 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('Focus');
   const [focusData, setFocusData] = useState({ attention: 0, source: 'Simulated' });
   const [spriteBase, setSpriteBase] = useState('');
-  const [spriteOverlay, setSpriteOverlay] = useState('');
-  const [overlayIndex, setOverlayIndex] = useState(0);
-  const [spriteIndex, setSpriteIndex] = useState(0);
   const [shakingTodoId, setShakingTodoId] = useState(null);
   const [showSnackbar, setShowSnackbar] = useState(false);
 
   const categories = ['Eating', 'Exercising', 'Focus', 'Sleeping'];
 
-  const overlays = [
-    chrome.runtime.getURL('images/study_mode/star_glasses.gif'),
-    chrome.runtime.getURL('images/study_mode/heart_glasses.gif'),
-    chrome.runtime.getURL('images/study_mode/blue_glasses.gif')
-  ];
-
-  const stateSprites = {
-    EATING: chrome.runtime.getURL('images/study_mode/eating.gif'),
-    STUDYING: chrome.runtime.getURL('images/study_mode/study.gif'),
-    SLEEPING: chrome.runtime.getURL('images/study_mode/sleeping.gif'),
+  const categorySprites = {
+    'Eating': chrome.runtime.getURL('images/eating/eating idle.gif'),
+    'Exercising': chrome.runtime.getURL('images/study_mode/sprite_study.gif'),
+    'Focus': chrome.runtime.getURL('images/study_mode/sprite_study.gif'),
+    'Sleeping': chrome.runtime.getURL('images/sleeping/sleeping idle.gif'),
   };
-
-  const changeState = (state) => {
-    if (stateSprites[state]) {
-      setCurrentState(state);
-      setSpriteOverlay(stateSprites[state]);
-    }
-  };
-
-  // Previous overlay
-  const prevOverlay = () => {
-    setOverlayIndex((prev) => (prev - 1 + overlays.length) % overlays.length);
-    setSpriteOverlay(overlays[(overlayIndex - 1 + overlays.length) % overlays.length]);
-  };
-
-  // Next overlay
-  const nextOverlay = () => {
-    setOverlayIndex((prev) => (prev + 1) % overlays.length);
-    setSpriteOverlay(overlays[(overlayIndex + 1) % overlays.length]);
-  };
-
 
   // Load sprites on mount
   useEffect(() => {
-    setSpriteBase(chrome.runtime.getURL('images/study_mode/sprite_study.gif'));
-    setSpriteOverlay(chrome.runtime.getURL('images/study_mode/star_glasses.gif'));
+    setSpriteBase(chrome.runtime.getURL('images/idle.gif'));
   }, []);
+
+  // Update sprite based on current doing task's category
+  useEffect(() => {
+    const doingTask = todos.find(t => t.state === 'doing');
+    if (doingTask && doingTask.category) {
+      setSpriteBase(categorySprites[doingTask.category]);
+    } else {
+      setSpriteBase(chrome.runtime.getURL('images/idle.gif'));
+    }
+  }, [todos]);
 
 
   // Load todos on mount
@@ -147,12 +128,9 @@ function App() {
     <div className="container">
     <h1 class="pixel-header">PomoDojo</h1>
         <div className="sprite-wrapper">
-          <button onClick={prevOverlay} className="sprite-btn">◀</button>
           <div className="sprite-container">
-            <img src={spriteBase} alt="Base Sprite" className="sprite" />
-            <img src={spriteOverlay} alt="Overlay Sprite" className="sprite overlay" />
+            <img src={spriteBase} alt="Sprite" className="sprite" />
           </div>
-          <button onClick={nextOverlay} className="sprite-btn">▶</button>
         </div>
 
       <div className="stats">
@@ -194,13 +172,13 @@ function App() {
       </div>
 
       <div className="filter-buttons">
-        {['all', 'todo', 'doing', 'done'].map(f => (
+        {['all', 'todo', 'done'].map(f => (
           <button
             key={f}
             className={`filter-btn ${filter === f ? 'active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'All' : f === 'todo' ? 'To-Do' : f === 'doing' ? 'Doing' : 'Done'}
+            {f === 'all' ? 'All' : f === 'todo' ? 'To-Do' : 'Done'}
           </button>
         ))}
       </div>
