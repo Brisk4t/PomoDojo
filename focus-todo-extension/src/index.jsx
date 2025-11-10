@@ -145,6 +145,7 @@ function App() {
 
   return (
     <div className="container">
+    <h1 class="pixel-header">PomoDojo</h1>
         <div className="sprite-wrapper">
           <button onClick={prevOverlay} className="sprite-btn">◀</button>
           <div className="sprite-container">

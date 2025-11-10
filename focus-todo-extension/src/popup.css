@@ -4,6 +4,20 @@
   box-sizing: border-box;
 }
 
+.pixel-header {
+    text-align: center;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    color: white;
+    background-color: darksalmon;
+    border-style: outset;
+    border-width: 5px;
+    border-color: rgb(120, 79, 73);
+    border-radius: 10px;
+    padding: 10px 10px 10px;
+    letter-spacing: 2px;
+
+}
+
 body {
   width: 400px;
   height: 600px;
