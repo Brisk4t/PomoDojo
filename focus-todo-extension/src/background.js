@@ -112,34 +112,19 @@ function stopAttentionTracking() {
 function getAttentionLevel(value) {
   let state;
 
-  if (value >= 80){ 
+  if (value >= 80) { 
     state = 'Deep Focus';
-  }
-  
-  if (value >= 60){ 
-    state ='Focused';
-    // chrome.action.setIcon({
-    //   path: spriteBase
-    // });
-  }
-
-  if (value >= 40){ 
-    state ='Neutral';
-    // chrome.action.setIcon({
-    //   path: chrome.runtime.getURL('images/sprite_1.png')
-    // });
+  } else if (value >= 60) { 
+    state = 'Focused';
+  } else if (value >= 40) { 
+    state = 'Neutral';
+  } else if (value >= 20) {
+    state = 'Distracted';
+  } else {
+    state = 'Very Distracted';
   }
 
-  if (value >= 20){
-    state ='Distracted';
-    // chrome.action.setIcon({
-    //   path: chrome.runtime.getURL('images/sprite_1.png')
-    // });
-  }
-
-  state ='Very Distracted';
-
-  return state
+  return state;
 }
 
 // Periodic attention check
@@ -158,7 +143,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 
   focusData = {
-    level: getAttentionLevel(attention),
+    level: getAttentionLevel(Math.round(attention)),
     attention: Math.round(attention),
     fps: 30,
     timestamp: Date.now(),
@@ -218,7 +203,7 @@ const MUSE_S = {
           if (msg.status === 'focus') {
             focusData = {
               level: getAttentionLevel(msg.focus),
-              attention: msg.focus,
+              attention: Math.round(msg.focus),
               engagement: msg.engagement,
               baseline: msg.baseline,
               fps: 30,
@@ -288,17 +273,13 @@ function notifyMuseStatus(isConnected) {
   });
 }
 
-// Update extension icon badge with focus level
 function updateIconBadge() {
-  const attentionLevelText = focusData.level;
-  const badgeText = attentionLevelText > 0 ? `${attentionLevelText}%` : '';
-  const badgeColor = attentionLevelText >= 70 ? '#10b981' : attentionLevelText >= 40 ? '#f59e0b' : '#ef4444';
+  const attention = focusData.attention;
+  const badgeText = `${attention}%`;
+  const badgeColor =
+    attention >= 70 ? '#10b981' :
+    attention >= 40 ? '#f59e0b' : '#ef4444';
 
-  chrome.action.setBadgeText({ text: badgeText }).catch(err => {
-    console.warn('Failed to set badge text:', err);
-  });
-
-  chrome.action.setBadgeBackgroundColor({ color: badgeColor }).catch(err => {
-    console.warn('Failed to set badge color:', err);
-  });
+  chrome.action.setBadgeText({ text: badgeText }).catch(console.warn);
+  chrome.action.setBadgeBackgroundColor({ color: badgeColor }).catch(console.warn);
 }
