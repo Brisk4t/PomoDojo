@@ -6,25 +6,56 @@
 
 body {
   width: 400px;
-  min-height: 600px;
+  height: 600px;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  color: #333;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 400px;
+  height: 600px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   background-image: url('/images/background.png');
-  background-size: cover;       /* image covers entire element */
-  background-position: center;  /* centers image horizontally & vertically */
-  background-repeat: no-repeat; /* prevents tiling */
-  color: #333;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
 }
 
 #root {
   width: 100%;
   height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#root::-webkit-scrollbar {
+  width: 8px;
+}
+
+#root::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#root::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+#root::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100%;
   padding: 16px;
 }
 
@@ -222,8 +253,7 @@ body {
 }
 
 .todos-container {
-  flex: 1;
-  overflow-y: auto;
+  overflow-y: visible;
   margin-bottom: 12px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
