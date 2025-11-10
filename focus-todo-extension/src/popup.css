@@ -6,48 +6,41 @@
 
 .pixel-header {
     text-align: center;
-    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-family:'Minecraft';
     color: white;
+    text-shadow: 2px 2px 5px #ffd7ff;
     background-color: darksalmon;
     border-style: outset;
     border-width: 5px;
     border-color: rgb(120, 79, 73);
     border-radius: 10px;
     padding: 10px 10px 10px;
-    letter-spacing: 2px;
-
+    letter-spacing: 5px;
 }
 
 body {
   width: 400px;
   height: 600px;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  overflow: auto;
+  font-family: 'Pixelfont';
   position: relative;
   color: #333;
-}
 
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 400px;
-  height: 600px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   background-image: url('/images/background.png');
-  background-size: cover;
+  background-size: 200%;        /* zoomed in */
   background-position: center;
   background-repeat: no-repeat;
-  z-index: -1;
+  background-attachment: scroll; /* <-- this makes it move */
 }
 
 #root {
   width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: auto;   /* not 100% — let it fit naturally */
+  overflow: visible; /* no inner scroll */
 }
+
 
 #root::-webkit-scrollbar {
   width: 8px;
@@ -83,9 +76,11 @@ body::before {
 }
 
 .header h1 {
-  color: white;
+  
+  color: #f08080;
   font-size: 24px;
   margin: 0;
+  font-family: 'Pixelfont';
 }
 
 .sprite-wrapper {
@@ -96,14 +91,17 @@ body::before {
 }
 
 .sprite-container {
+  top: 200px;
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 250px;
+  height: 250px;
   margin: 0 10px; /* spacing for buttons */
+  pointer-events: none; /* overlay doesn’t block clicks */
+
 }
 
 .sprite {
-  position: absolute;
+  position: relative;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%); /* center inside container */
@@ -113,6 +111,7 @@ body::before {
 }
 
 .sprite.overlay {
+   z-index: 0;  
   pointer-events: none; /* overlay doesn’t block clicks */
   opacity: 1;
 }
@@ -148,12 +147,16 @@ body::before {
 }
 
 .stats {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(187, 133, 136, 0.7);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 12px;
+  margin-top: 20px;
   display: flex;
   gap: 16px;
+  position: relative;
+  top: -250px;
+  
 }
 
 .stat-item {
@@ -164,7 +167,8 @@ body::before {
 
 .stat-item .label {
   font-size: 12px;
-  color: #666;
+  font-family: 'Pixelfont';
+  color: #973540;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 4px;
@@ -172,11 +176,15 @@ body::before {
 
 .stat-item .value {
   font-size: 16px;
+  font-family: 'Pixelfont';
   font-weight: 600;
-  color: #667eea;
+  color: #feeff2;
+  text-shadow: 2px 2px 5px #fcc6dd;
 }
 
 .input-section {
+  
+  margin-top: 50px;
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
@@ -184,6 +192,7 @@ body::before {
 }
 
 #todoInput {
+  
   flex: 1 1 0;   /* allow shrinking */
   min-width: 0;  /* prevents overflowing flex item */
 }
@@ -193,20 +202,24 @@ body::before {
 }
 
 .category-select {
+  top: -20px;
   padding: 10px 8px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 6px;
   font-size: 14px;
+  font-family: 'Pixelfont';
   background: rgba(255, 255, 255, 0.9);
   color: #333;
   cursor: pointer;
   transition: border-color 0.2s;
   min-width: 130px;
+  
 }
 
 .category-select:focus {
+  top: -200px;
   outline: none;
-  border-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.7);
   background: white;
 }
 
@@ -216,7 +229,8 @@ body::before {
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 6px;
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.9);
+  font-family: 'Pixelfont';
+  background: white(255, 255, 255, 0.8);
   color: #333;
   transition: border-color 0.2s;
 }
@@ -234,13 +248,14 @@ body::before {
   border: none;
   border-radius: 6px;
   font-weight: 600;
+  font-family: 'Pixelfont';
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.5s;
   font-size: 14px;
 }
 
 #addBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(247, 209, 225, 0.8);
 }
 
 .filter-buttons {
@@ -258,28 +273,30 @@ body::before {
   border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
+  font-family: 'Pixelfont';
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.8s;
 }
 
 .filter-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .filter-btn.active {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.5);
 }
 
 .category-filters {
   flex-wrap: wrap;
   font-size: 11px;
+  font-family: 'Pixelfont';
 }
 
 .todos-container {
   overflow-y: visible;
   margin-bottom: 12px;
-  background: rgba(255, 255, 255, 0.95);
+  background: darksalmon(255, 255, 255, 0.95);
   border-radius: 8px;
   padding: 8px;
 }
@@ -287,8 +304,9 @@ body::before {
 .empty-state {
   text-align: center;
   padding: 32px 16px;
-  color: #999;
+  color: #542e35;
   font-size: 14px;
+  font-family: 'Pixelfont';
 }
 
 .todo-item {
@@ -304,17 +322,17 @@ body::before {
 }
 
 .todo-item.todo {
-  border-left-color: #ffa500;
+  border-left-color: #f5dcad;
   background: #fffbf0;
 }
 
 .todo-item.doing {
-  border-left-color: #667eea;
+  border-left-color: #aab9f9;
   background: #f0f4ff;
 }
 
 .todo-item.done {
-  border-left-color: #10b981;
+  border-left-color: #97f5d6;
   background: #f0fdf4;
 }
 
@@ -331,6 +349,7 @@ body::before {
   font-size: 20px;
   cursor: pointer;
   min-width: 24px;
+  font-family: 'Pixelfont';
 }
 
 .todo-content {
@@ -341,6 +360,7 @@ body::before {
 }
 
 .todo-text {
+  font-family: 'Pixelfont';
   font-size: 14px;
   color: #333;
 }
@@ -351,6 +371,7 @@ body::before {
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
+  font-family: 'Pixelfont';
   width: fit-content;
 }
 
@@ -390,6 +411,7 @@ body::before {
   background: transparent;
   cursor: pointer;
   font-size: 12px;
+  font-family: 'Pixelfont';
   border-radius: 3px;
   transition: background 0.2s;
   color: #666;
@@ -403,6 +425,7 @@ body::before {
 .todo-attention {
   font-size: 12px;
   color: #667eea;
+  font-family: 'Pixelfont';
   font-weight: 600;
 }
 
@@ -419,6 +442,7 @@ body::before {
   border: none;
   border-radius: 6px;
   font-weight: 600;
+  font-family: 'Pixelfont';
   cursor: pointer;
   font-size: 13px;
   transition: all 0.2s;
@@ -472,10 +496,11 @@ body::before {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(67, 24, 35, 0.85);
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
+  font-family: 'Pixelfont';
   font-size: 14px;
   font-weight: 500;
   z-index: 1000;

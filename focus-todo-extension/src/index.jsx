@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './popup.css';
+import './style.css';
 
 function App() {
   const [todos, setTodos] = useState([]);
