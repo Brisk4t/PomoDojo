@@ -1,4 +1,11 @@
 // Background service worker for attention tracking
+//
+// Architecture:
+// - WEBSOCKET: Manages connection to desktop app (ws://localhost:6969)
+//   - Receives focus data from Muse S (if available) or simulated data
+//   - Sends commands for blink tracking (start/stop)
+// - Blink detection: Independent webcam-based tracking (starts when task is "doing")
+// - Muse S: EEG-based focus tracking (optional, works through desktop app)
 
 let isTracking = false;
 let currentTodoId = null;
@@ -9,7 +16,8 @@ let spriteBase = chrome.runtime.getURL('images/study_mode/sprite_study.gif');
 let focusData = {
   level: 'N/A',
   attention: 0,
-  fps: 0
+  fps: 0,
+  blinks: null  // Will contain {total, rate, ear, face_detected} when blink tracking is active
 };
 
 // Initialize icon on startup
@@ -22,10 +30,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case 'startTracking':
       currentTodoId = request.todoId;
+      // Start blink tracking when task tracking starts
+      startBlinkTracking();
       sendResponse({ success: true });
       break;
     case 'stopTracking':
       currentTodoId = null;
+      // Stop blink tracking when task tracking stops
+      stopBlinkTracking();
       sendResponse({ success: true });
       break;
     case 'startAttentionTracking':
@@ -52,7 +64,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
 
     case 'connectMuse':
-      connectMuseWithReconnect();
+      // Connect to desktop app WebSocket (handles both Muse S and blink detection)
+      connectWebSocket();
       sendResponse({ success: true });
       break;
   }
@@ -75,13 +88,18 @@ function notifyDistracted() {
   });
 }
 
-function connectMuseWithReconnect() {
-  if (!MUSE_S.isConnected) {
-    MUSE_S.connect().catch(() => {
+function connectWebSocket() {
+  if (!WEBSOCKET.isConnected) {
+    WEBSOCKET.connect().catch(() => {
       // If failed, try reconnect after 5 seconds
-      setTimeout(connectMuseWithReconnect, 5000);
+      setTimeout(connectWebSocket, 5000);
     });
   }
+}
+
+// Legacy function (backward compatibility)
+function connectMuseWithReconnect() {
+  connectWebSocket();
 }
 
 // Use chrome.alarms to periodically ping the worker so it doesn't sleep
@@ -89,7 +107,7 @@ chrome.alarms.create('wakeUp', { periodInMinutes: 1 / 60 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'wakeUp') {
     console.log('Service worker woke up to keep alive');
-    connectMuseWithReconnect();
+    connectWebSocket();
   }
 });
 
@@ -107,6 +125,36 @@ function startAttentionTracking() {
 function stopAttentionTracking() {
   isTracking = false;
   chrome.alarms.clear('attentionCheck');
+}
+
+// Start blink tracking
+function startBlinkTracking() {
+  if (WEBSOCKET.socket && WEBSOCKET.isConnected) {
+    try {
+      WEBSOCKET.socket.send(JSON.stringify({ action: 'startBlinkTracking' }));
+      console.log('[INFO] Sent startBlinkTracking command to desktop app');
+    } catch (err) {
+      console.error('Failed to send startBlinkTracking command:', err);
+    }
+  } else {
+    console.warn('Cannot start blink tracking: WebSocket not connected');
+    // Try to connect WebSocket if not connected
+    connectWebSocket();
+  }
+}
+
+// Stop blink tracking
+function stopBlinkTracking() {
+  if (WEBSOCKET.socket && WEBSOCKET.isConnected) {
+    try {
+      WEBSOCKET.socket.send(JSON.stringify({ action: 'stopBlinkTracking' }));
+      console.log('[INFO] Sent stopBlinkTracking command to desktop app');
+      // Clear blink data from focusData
+      focusData.blinks = null;
+    } catch (err) {
+      console.error('Failed to send stopBlinkTracking command:', err);
+    }
+  }
 }
 
 function getAttentionLevel(value) {
@@ -133,10 +181,12 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
   let attention;
 
-  if (MUSE_S.isConnected) {
+  // Check if we're receiving real focus data from desktop app (Muse S)
+  // If WebSocket is connected and we have engagement data, use that
+  if (WEBSOCKET.isConnected && focusData.engagement !== undefined) {
     attention = MUSE_S.getAttention();
   } else {
-    // Simulate realistic attention
+    // Simulate realistic attention when desktop app not connected
     const variation = Math.sin(Date.now() / 1000) * 20;
     const noise = (Math.random() - 0.5) * 15;
     attention = Math.max(0, Math.min(100, 60 + variation + noise));
@@ -179,10 +229,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
-// Muse S via WebSocket Integration
-const MUSE_S = {
-  isConnected: false,
+// WebSocket connection (used for both Muse S and Blink Detection)
+const WEBSOCKET = {
   socket: null,
+  isConnected: false,
 
   connect: function () {
     return new Promise((resolve, reject) => {
@@ -191,15 +241,17 @@ const MUSE_S = {
       this.socket = new WebSocket('ws://localhost:6969');
 
       this.socket.addEventListener('open', () => {
-        console.log('Connected to local Muse WebSocket');
+        console.log('Connected to desktop app WebSocket');
         this.isConnected = true;
-        notifyMuseStatus(true);
+        notifyWebSocketStatus(true);
         resolve();
       });
 
       this.socket.addEventListener('message', (event) => {
         try {
           const msg = JSON.parse(event.data);
+
+          // Handle focus data from desktop (Muse S or simulated)
           if (msg.status === 'focus') {
             focusData = {
               level: getAttentionLevel(msg.focus),
@@ -208,7 +260,8 @@ const MUSE_S = {
               baseline: msg.baseline,
               fps: 30,
               timestamp: msg.timestamp,
-              source: 'WebSocket Muse'
+              source: msg.engagement ? 'Muse S' : 'Simulated',
+              blinks: msg.blinks || null  // Include blink data if available
             };
 
             updateIconBadge();
@@ -216,10 +269,27 @@ const MUSE_S = {
             // Notify if distracted - only when actively working on a task
             if (currentTodoId && focusData.attention < 40) notifyDistracted();
 
-          chrome.runtime.sendMessage({ action: 'updateFocusData', data: focusData })
-            .catch(() => {
-              // Popup not open — ignore
-            });          
+            chrome.runtime.sendMessage({ action: 'updateFocusData', data: focusData })
+              .catch(() => {
+                // Popup not open — ignore
+              });
+          }
+
+          // Handle blink-only data (when Muse S not connected)
+          if (msg.status === 'blink_only') {
+            // Update blink data without changing focus/attention
+            focusData.blinks = msg.blinks;
+            focusData.timestamp = msg.timestamp;
+
+            chrome.runtime.sendMessage({ action: 'updateFocusData', data: focusData })
+              .catch(() => {
+                // Popup not open — ignore
+              });
+          }
+
+          // Handle other response types (success, error, etc)
+          if (msg.status === 'success' || msg.status === 'error') {
+            console.log('[WebSocket Response]', msg);
           }
         } catch (e) {
           console.warn('Invalid data from WebSocket', e);
@@ -227,15 +297,15 @@ const MUSE_S = {
       });
 
       this.socket.addEventListener('close', () => {
-        console.log('Muse WebSocket disconnected');
+        console.log('Desktop app WebSocket disconnected');
         this.isConnected = false;
-        notifyMuseStatus(false);
+        notifyWebSocketStatus(false);
       });
 
       this.socket.addEventListener('error', (err) => {
-        console.error('Muse WebSocket error', err);
+        console.error('Desktop app WebSocket error', err);
         this.isConnected = false;
-        notifyMuseStatus(false);
+        notifyWebSocketStatus(false);
         reject(err);
       });
     });
@@ -246,8 +316,27 @@ const MUSE_S = {
       this.socket.close();
       this.socket = null;
       this.isConnected = false;
-      notifyMuseStatus(false);
+      notifyWebSocketStatus(false);
     }
+  }
+};
+
+// Legacy Muse S wrapper (for backward compatibility)
+const MUSE_S = {
+  get isConnected() {
+    return WEBSOCKET.isConnected;
+  },
+
+  get socket() {
+    return WEBSOCKET.socket;
+  },
+
+  connect: function () {
+    return WEBSOCKET.connect();
+  },
+
+  disconnect: function () {
+    return WEBSOCKET.disconnect();
   },
 
   getAttention: function () {
@@ -256,23 +345,29 @@ const MUSE_S = {
 
   getStatus: function () {
     return {
-      isConnected: this.isConnected,
+      isConnected: WEBSOCKET.isConnected,
       focusData: focusData
     };
   }
 };
 
 
-// Notify popup of Muse status
-function notifyMuseStatus(isConnected) {
+// Notify popup of WebSocket connection status
+function notifyWebSocketStatus(isConnected) {
   chrome.runtime.sendMessage({
-    action: 'museStatusUpdate',
+    action: 'museStatusUpdate',  // Keep same action name for backward compatibility
     isConnected: isConnected
   }).catch(() => {
     // Popup not open
   });
 }
 
+// Legacy function (backward compatibility)
+function notifyMuseStatus(isConnected) {
+  notifyWebSocketStatus(isConnected);
+}
+
+// Update extension icon badge with focus level
 function updateIconBadge() {
   const attention = focusData.attention;
   const badgeText = `${attention}%`;
