@@ -9,6 +9,10 @@ body {
   min-height: 600px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-image: url('/images/background.png');
+  background-size: cover;       /* image covers entire element */
+  background-position: center;  /* centers image horizontally & vertically */
+  background-repeat: no-repeat; /* prevents tiling */
   color: #333;
 }
 

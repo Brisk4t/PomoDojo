@@ -124,9 +124,9 @@ function getAttentionLevel(value) {
   
   if (value >= 60){ 
     state ='Focused';
-    chrome.action.setIcon({
-      path: spriteBase
-    });
+    // chrome.action.setIcon({
+    //   path: spriteBase
+    // });
   }
 
   if (value >= 40){ 
