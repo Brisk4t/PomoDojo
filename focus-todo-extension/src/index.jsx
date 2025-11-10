@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
+import StudyDashboard from "./StudyDashboard";
 import './popup.css';
+import './style.css';
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -187,12 +189,7 @@ function App() {
 
   return (
     <div className="container">
-    <h1 class="pixel-header">PomoDojo</h1>
-        <div className="sprite-wrapper">
-          <div className="sprite-container">
-            <img src={spriteBase} alt="Sprite" className="sprite" />
-          </div>
-        </div>
+      <h1 class="pixel-header">PomoDojo</h1>
 
       <div className="stats">
         <div className="stat-item">
@@ -207,6 +204,10 @@ function App() {
           <div className="label">Level</div>
           <div className="value">{focusData.level}</div>
         </div>
+      </div>
+
+      <div className="sprite-container">
+        <img src={spriteBase} alt="Sprite" className="sprite" />
       </div>
 
       <div className="input-section">
