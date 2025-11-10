@@ -175,8 +175,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   updateIconBadge();
 
   // Notify if distracted (cooldown: 1 minute)
-  if (focusData.attention < 40 && Date.now() - lastDistractedNotification > 60_000) {
-    lastDistractedNotification = Date.now();
+  if (focusData.attention < 40) {
     notifyDistracted();
   }
 

@@ -12,6 +12,7 @@ from muselsl import list_muses, stream
 # Set of connected clients
 clients = set()
 
+
 async def register(websocket):
     """Register a new client connection"""
     clients.add(websocket)
@@ -20,6 +21,7 @@ async def register(websocket):
     finally:
         clients.remove(websocket)
 
+
 async def broadcast(data):
     """Broadcast data to all connected clients"""
     if clients:
@@ -27,8 +29,7 @@ async def broadcast(data):
         message = json.dumps(data)
         # Broadcast to all connected clients
         await asyncio.gather(
-            *[client.send(message) for client in clients],
-            return_exceptions=True
+            *[client.send(message) for client in clients], return_exceptions=True
         )
 
 
@@ -62,7 +63,9 @@ def start_muse_stream(muse_name: Optional[str] = None):
                     break
         if not chosen:
             available = ", ".join([repr(m.get("name")) for m in muses])
-            raise RuntimeError(f"Muse named {muse_name!r} not found. Available: {available}")
+            raise RuntimeError(
+                f"Muse named {muse_name!r} not found. Available: {available}"
+            )
     else:
         chosen = muses[0]
 
@@ -71,6 +74,7 @@ def start_muse_stream(muse_name: Optional[str] = None):
     # Create a separate thread with its own asyncio loop
     def thread_target():
         import asyncio
+
         asyncio.set_event_loop(asyncio.new_event_loop())
         stream(chosen["address"])
 
@@ -83,11 +87,13 @@ def start_muse_stream(muse_name: Optional[str] = None):
 
 def focus_stream_thread(main_loop):
     """Run focus stream in separate thread"""
+
     def callback(data):
         # Schedule broadcast() safely on the main loop
         asyncio.run_coroutine_threadsafe(broadcast(data), main_loop)
 
     stream_focus(callback)
+
 
 async def main():
     port = 6969
@@ -103,16 +109,15 @@ async def main():
 
         await asyncio.Future()  # Keep server alive
 
+
 if __name__ == "__main__":
-    
     cfg = load_config("config.json")
     muse_name = cfg.get("hardware", {}).get("BLE_SSID")
 
-
     try:
-        #start_muse_stream()
-        #print("Stream Started Succesfully")
-        #time.sleep(5)
+        # start_muse_stream()
+        # print("Stream Started Succesfully")
+        # time.sleep(5)
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nServer stopped")

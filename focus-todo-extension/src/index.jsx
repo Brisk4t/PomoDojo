@@ -6,11 +6,16 @@ function App() {
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState('');
   const [filter, setFilter] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('Focus');
   const [focusData, setFocusData] = useState({ attention: 0, source: 'Simulated' });
   const [spriteBase, setSpriteBase] = useState('');
   const [spriteOverlay, setSpriteOverlay] = useState('');
   const [overlayIndex, setOverlayIndex] = useState(0);
   const [spriteIndex, setSpriteIndex] = useState(0);
+  const [shakingTodoId, setShakingTodoId] = useState(null);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+
+  const categories = ['Eating', 'Exercising', 'Focus', 'Sleeping'];
 
   const overlays = [
     chrome.runtime.getURL('images/study_mode/star_glasses.gif'),
@@ -88,6 +93,7 @@ function App() {
       id: Date.now(),
       text: input.trim(),
       state: 'todo',
+      category: selectedCategory,
       createdAt: new Date().toISOString(),
       attentionData: [],
     };
@@ -99,6 +105,18 @@ function App() {
   const updateTodo = (id, newState) => {
     const todo = todos.find(t => t.id === id);
     if (!todo) return;
+
+    // Check if trying to set to "doing" when another task is already "doing"
+    const currentDoingTodo = todos.find(t => t.state === 'doing');
+    if (newState === 'doing' && currentDoingTodo && currentDoingTodo.id !== id) {
+      // Shake the currently doing task
+      setShakingTodoId(currentDoingTodo.id);
+      setTimeout(() => setShakingTodoId(null), 500);
+      // Show snackbar
+      setShowSnackbar(true);
+      setTimeout(() => setShowSnackbar(false), 2500);
+      return; // Don't allow multiple "doing" tasks
+    }
 
     if (newState === 'doing' && todo.state !== 'doing') {
       chrome.runtime.sendMessage({ action: 'startTracking', todoId: id });
@@ -118,6 +136,12 @@ function App() {
   const doingTodo = todos.find(t => t.state === 'doing');
 
   const getStateEmoji = (state) => ({ todo: '⭕', doing: '🔵', done: '✅' }[state] || '⭕');
+  const getCategoryEmoji = (category) => ({
+    'Eating': '🍽️',
+    'Exercising': '💪',
+    'Focus': '🎯',
+    'Sleeping': '😴'
+  }[category] || '🎯');
 
   return (
     <div className="container">
@@ -146,6 +170,17 @@ function App() {
       </div>
 
       <div className="input-section">
+        <select
+          className="category-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          {categories.map(cat => (
+            <option key={cat} value={cat}>
+              {getCategoryEmoji(cat)} {cat}
+            </option>
+          ))}
+        </select>
         <input
           id="todoInput"
           type="text"
@@ -171,10 +206,15 @@ function App() {
 
       <div className="todos-container">
         {filteredTodos.length === 0 ? (
-          <div className="empty-state">No todos yet. Add one to get started!</div>
+          <div className="empty-state">
+            {filter === 'all' && 'No todos yet. Add one to get started!'}
+            {filter === 'todo' && 'No pending todos'}
+            {filter === 'doing' && 'No tasks in progress'}
+            {filter === 'done' && 'No completed todos'}
+          </div>
         ) : (
           filteredTodos.map(todo => (
-            <div key={todo.id} className={`todo-item ${todo.state}`}>
+            <div key={todo.id} className={`todo-item ${todo.state} ${shakingTodoId === todo.id ? 'shake' : ''}`}>
               <div
                 className="todo-state"
                 onClick={() => {
@@ -185,7 +225,14 @@ function App() {
               >
                 {getStateEmoji(todo.state)}
               </div>
-              <div className="todo-text">{todo.text}</div>
+              <div className="todo-content">
+                <div className="todo-text">{todo.text}</div>
+                {todo.category && (
+                  <span className={`todo-category category-${todo.category.toLowerCase()}`}>
+                    {getCategoryEmoji(todo.category)} {todo.category}
+                  </span>
+                )}
+              </div>
               {todo.state === 'doing' && (
                 <div className="todo-attention">📊 N/A</div>
               )}
@@ -196,26 +243,11 @@ function App() {
           ))
         )}
       </div>
-
-      <div className="footer">
-        <button className="btn-secondary">▶ Start Tracking</button>
-        <button
-          className="btn-secondary"
-          onClick={() => {
-            chrome.runtime.sendMessage({ action: 'connectMuse' }, (response) => {
-              if (response?.success) {
-                console.log('Connecting to Muse WebSocket...');
-              }
-              else{
-                console.error("Connection failed", response.error);
-              }
-            });
-          }}
-        >
-          🧠 Muse S
-        </button>
-
-      </div>
+      {showSnackbar && (
+        <div className="snackbar">
+          Finish your task first
+        </div>
+      )}
     </div>
   );
 }
