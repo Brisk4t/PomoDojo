@@ -18,7 +18,8 @@ blink_state = {
     "active": False,
     "thread": None,
     "stop_event": None,
-    "latest_data": None
+    "latest_data": None,
+    "event_loop": None  # Store event loop for broadcasting
 }
 
 
@@ -59,8 +60,27 @@ def start_blink_tracking():
     blink_state["active"] = True
 
     def blink_callback(data):
-        """Store latest blink data"""
+        """Store latest blink data and broadcast if no focus stream"""
         blink_state["latest_data"] = data
+
+        # If there's no focus stream active, broadcast blink data independently
+        # This allows blink detection to work without Muse S
+        if data.get("status") in ["tracking", "no_face"] and blink_state["event_loop"]:
+            broadcast_data = {
+                "status": "blink_only",
+                "timestamp": data.get("timestamp"),
+                "blinks": {
+                    "total": data.get("total_blinks", 0),
+                    "rate": data.get("blink_rate", 0),
+                    "ear": data.get("ear", 0),
+                    "face_detected": data.get("face_detected", False)
+                }
+            }
+            # Broadcast to all clients
+            asyncio.run_coroutine_threadsafe(
+                broadcast(broadcast_data),
+                blink_state["event_loop"]
+            )
 
     blink_state["thread"] = Thread(
         target=stream_blinks,
@@ -199,7 +219,11 @@ def focus_stream_thread(main_loop):
         # Schedule broadcast() safely on the main loop
         asyncio.run_coroutine_threadsafe(broadcast(data), main_loop)
 
-    stream_focus(callback)
+    try:
+        stream_focus(callback)
+    except RuntimeError as e:
+        print(f"[WARNING] Muse S not available: {e}")
+        print("[INFO] Server will continue running for blink detection only")
 
 
 async def main():
@@ -209,8 +233,11 @@ async def main():
     async with websockets.serve(register, base_url, port):
         print(f"WebSocket server running at ws://{base_url}:{port}")
 
-        # Pass the main event loop to the thread
+        # Store the main event loop for blink detection broadcasting
         loop = asyncio.get_event_loop()
+        blink_state["event_loop"] = loop
+
+        # Start focus stream thread (optional - will fail gracefully if Muse S not available)
         thread = Thread(target=focus_stream_thread, args=(loop,), daemon=True)
         thread.start()
 
