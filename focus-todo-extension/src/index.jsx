@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
+import StudyDashboard from "./StudyDashboard";
 import './popup.css';
 
 function App() {

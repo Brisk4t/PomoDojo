@@ -594,3 +594,38 @@ body::before {
     opacity: 0;
   }
 }
+
+.category-progress-container {
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: -8px;
+}
+
+.category-progress-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.progress-label {
+  font-size: 12px;
+  margin-bottom: 2px;
+  text-align: left;
+  color: #d9d9d9;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #3a3a3a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #22c55e);
+  transition: width 0.4s ease;
+}
