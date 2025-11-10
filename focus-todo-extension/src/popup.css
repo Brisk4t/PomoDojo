@@ -96,6 +96,12 @@ body {
   75% { transform: rotate(3deg); }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
 .stats {
   background: rgba(255, 255, 255, 0.95);
   padding: 12px;
@@ -129,6 +135,24 @@ body {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.category-select {
+  padding: 10px 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 130px;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.8);
+  background: white;
 }
 
 #todoInput {
@@ -192,6 +216,11 @@ body {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+.category-filters {
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+
 .todos-container {
   flex: 1;
   overflow-y: auto;
@@ -240,16 +269,55 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.todo-item.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
 .todo-state {
   font-size: 20px;
   cursor: pointer;
   min-width: 24px;
 }
 
-.todo-text {
+.todo-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.todo-text {
   font-size: 14px;
   color: #333;
+}
+
+.todo-category {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.category-eating {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.category-exercising {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.category-focus {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.category-sleeping {
+  background-color: #ede9fe;
+  color: #5b21b6;
 }
 
 .todo-item.done .todo-text {
@@ -343,4 +411,40 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+.snackbar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 2.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }

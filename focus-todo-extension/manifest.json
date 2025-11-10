@@ -7,11 +7,8 @@
     "storage",
     "tabs",
     "scripting",
-    "bluetooth",
-    "bluetoothPrivate",
     "notifications",
-    "alarms",
-    "action"
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"
