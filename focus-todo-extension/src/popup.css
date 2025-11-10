@@ -166,6 +166,16 @@ body::before {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: wrap; /* allows button to stay inside on small widths */
+}
+
+#todoInput {
+  flex: 1 1 0;   /* allow shrinking */
+  min-width: 0;  /* prevents overflowing flex item */
+}
+
+#addBtn {
+  flex-shrink: 0;
 }
 
 .category-select {
