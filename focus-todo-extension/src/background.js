@@ -55,12 +55,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       connectMuseWithReconnect();
       sendResponse({ success: true });
       break;
-
-    case 'getLatestFocusData':
-      chrome.storage.local.get(['latestFocusData'], (result) => {
-        sendResponse({ data: result.latestFocusData || focusData });
-      });
-      return true; // keep alive
   }
 });
 

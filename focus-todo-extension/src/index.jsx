@@ -51,9 +51,6 @@ function App() {
 
   // Load latest focus data on mount
   useEffect(() => {
-    chrome.runtime.sendMessage({ action: 'getLatestFocusData' }, (response) => {
-      if (response?.data) setFocusData(response.data);
-    });
 
     // Live updates from background
     const handler = (request) => {
