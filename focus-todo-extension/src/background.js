@@ -12,6 +12,7 @@ let currentTodoId = null;
 let cameraStream = null;
 let lastDistractedNotification = 0;
 let spriteBase = chrome.runtime.getURL('images/study_mode/sprite_study.gif');
+let spriteSad = chrome.runtime.getURL('images/sad/sad.png');
 
 let focusData = {
   level: 'N/A',
@@ -80,7 +81,7 @@ function notifyDistracted() {
 
   chrome.notifications.create({
     type: 'basic',
-    iconUrl: spriteBase,
+    iconUrl: spriteSad,
     title: 'Pomo is sad',
     message: 'You seem distracted — refocus and get back on track!'
   }).catch(err => {
