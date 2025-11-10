@@ -38,8 +38,8 @@ def map_to_focus_z(engagement, baseline_mean, baseline_std):
     return float(np.clip(focus, 1, 100))
 
 def stream_focus(callback: Callable[[Dict[str, Any]], None], 
-                window_len=4, 
-                update_every=1, 
+                window_len=5, 
+                update_every=2, 
                 sample_frequency_hz=256):
     """
     Stream focus data with callback for output handling
