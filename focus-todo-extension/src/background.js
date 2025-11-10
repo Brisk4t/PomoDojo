@@ -9,7 +9,8 @@ let spriteBase = chrome.runtime.getURL('images/study_mode/sprite_study.gif');
 let focusData = {
   level: 'N/A',
   attention: 0,
-  fps: 0
+  fps: 0,
+  blinks: null  // Will contain {total, rate, ear, face_detected} when blink tracking is active
 };
 
 // Initialize icon on startup
@@ -22,10 +23,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case 'startTracking':
       currentTodoId = request.todoId;
+      // Start blink tracking when task tracking starts
+      startBlinkTracking();
       sendResponse({ success: true });
       break;
     case 'stopTracking':
       currentTodoId = null;
+      // Stop blink tracking when task tracking stops
+      stopBlinkTracking();
       sendResponse({ success: true });
       break;
     case 'startAttentionTracking':
@@ -107,6 +112,34 @@ function startAttentionTracking() {
 function stopAttentionTracking() {
   isTracking = false;
   chrome.alarms.clear('attentionCheck');
+}
+
+// Start blink tracking
+function startBlinkTracking() {
+  if (MUSE_S.socket && MUSE_S.isConnected) {
+    try {
+      MUSE_S.socket.send(JSON.stringify({ action: 'startBlinkTracking' }));
+      console.log('[INFO] Sent startBlinkTracking command to desktop app');
+    } catch (err) {
+      console.error('Failed to send startBlinkTracking command:', err);
+    }
+  } else {
+    console.warn('Cannot start blink tracking: WebSocket not connected');
+  }
+}
+
+// Stop blink tracking
+function stopBlinkTracking() {
+  if (MUSE_S.socket && MUSE_S.isConnected) {
+    try {
+      MUSE_S.socket.send(JSON.stringify({ action: 'stopBlinkTracking' }));
+      console.log('[INFO] Sent stopBlinkTracking command to desktop app');
+      // Clear blink data from focusData
+      focusData.blinks = null;
+    } catch (err) {
+      console.error('Failed to send stopBlinkTracking command:', err);
+    }
+  }
 }
 
 function getAttentionLevel(value) {
@@ -223,7 +256,8 @@ const MUSE_S = {
               baseline: msg.baseline,
               fps: 30,
               timestamp: msg.timestamp,
-              source: 'WebSocket Muse'
+              source: 'WebSocket Muse',
+              blinks: msg.blinks || null  // Include blink data if available
             };
 
             updateIconBadge();
@@ -234,7 +268,7 @@ const MUSE_S = {
           chrome.runtime.sendMessage({ action: 'updateFocusData', data: focusData })
             .catch(() => {
               // Popup not open — ignore
-            });          
+            });
           }
         } catch (e) {
           console.warn('Invalid data from WebSocket', e);

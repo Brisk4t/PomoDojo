@@ -6,18 +6,31 @@ from pathlib import Path
 import time
 import threading
 from focus import stream_focus
+from blink_detection import stream_blinks
 from threading import Thread
 from muselsl import list_muses, stream
 
 # Set of connected clients
 clients = set()
 
+# Global state for blink tracking
+blink_state = {
+    "active": False,
+    "thread": None,
+    "stop_event": None,
+    "latest_data": None
+}
+
 
 async def register(websocket):
-    """Register a new client connection"""
+    """Register a new client connection and handle incoming messages"""
     clients.add(websocket)
     try:
-        await websocket.wait_closed()
+        # Listen for incoming messages
+        async for message in websocket:
+            await handle_client_message(websocket, message)
+    except websockets.exceptions.ConnectionClosed:
+        pass
     finally:
         clients.remove(websocket)
 
@@ -31,6 +44,88 @@ async def broadcast(data):
         await asyncio.gather(
             *[client.send(message) for client in clients], return_exceptions=True
         )
+
+
+def start_blink_tracking():
+    """Start blink detection thread"""
+    global blink_state
+
+    if blink_state["active"]:
+        print("[INFO] Blink tracking already active")
+        return
+
+    print("[INFO] Starting blink tracking...")
+    blink_state["stop_event"] = threading.Event()
+    blink_state["active"] = True
+
+    def blink_callback(data):
+        """Store latest blink data"""
+        blink_state["latest_data"] = data
+
+    blink_state["thread"] = Thread(
+        target=stream_blinks,
+        args=(blink_callback, blink_state["stop_event"]),
+        daemon=True
+    )
+    blink_state["thread"].start()
+
+
+def stop_blink_tracking():
+    """Stop blink detection thread"""
+    global blink_state
+
+    if not blink_state["active"]:
+        print("[INFO] Blink tracking not active")
+        return
+
+    print("[INFO] Stopping blink tracking...")
+    if blink_state["stop_event"]:
+        blink_state["stop_event"].set()
+
+    blink_state["active"] = False
+    blink_state["latest_data"] = None
+
+    # Wait for thread to finish
+    if blink_state["thread"] and blink_state["thread"].is_alive():
+        blink_state["thread"].join(timeout=2)
+
+
+async def handle_client_message(websocket, message):
+    """Handle incoming messages from clients"""
+    try:
+        data = json.loads(message)
+        action = data.get("action")
+
+        if action == "startBlinkTracking":
+            start_blink_tracking()
+            await websocket.send(json.dumps({
+                "status": "success",
+                "message": "Blink tracking started"
+            }))
+
+        elif action == "stopBlinkTracking":
+            stop_blink_tracking()
+            await websocket.send(json.dumps({
+                "status": "success",
+                "message": "Blink tracking stopped"
+            }))
+
+        else:
+            await websocket.send(json.dumps({
+                "status": "error",
+                "message": f"Unknown action: {action}"
+            }))
+
+    except json.JSONDecodeError:
+        await websocket.send(json.dumps({
+            "status": "error",
+            "message": "Invalid JSON"
+        }))
+    except Exception as e:
+        await websocket.send(json.dumps({
+            "status": "error",
+            "message": str(e)
+        }))
 
 
 def load_config(path: str = "config.json") -> Dict[str, Any]:
@@ -89,6 +184,18 @@ def focus_stream_thread(main_loop):
     """Run focus stream in separate thread"""
 
     def callback(data):
+        # Merge blink data if available
+        if blink_state["active"] and blink_state["latest_data"]:
+            blink_data = blink_state["latest_data"]
+            # Only include blink data if tracking status is active
+            if blink_data.get("status") in ["tracking", "no_face"]:
+                data["blinks"] = {
+                    "total": blink_data.get("total_blinks", 0),
+                    "rate": blink_data.get("blink_rate", 0),
+                    "ear": blink_data.get("ear", 0),
+                    "face_detected": blink_data.get("face_detected", False)
+                }
+
         # Schedule broadcast() safely on the main loop
         asyncio.run_coroutine_threadsafe(broadcast(data), main_loop)
 
