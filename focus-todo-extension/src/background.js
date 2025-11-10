@@ -168,8 +168,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   // Update icon badge
   updateIconBadge();
 
-  // Notify if distracted (cooldown: 1 minute)
-  if (focusData.attention < 40) {
+  // Notify if distracted (cooldown: 1 minute) - only when actively working on a task
+  if (currentTodoId && focusData.attention < 40) {
     notifyDistracted();
   }
 
@@ -228,7 +228,8 @@ const MUSE_S = {
 
             updateIconBadge();
 
-            if (focusData.attention < 40) notifyDistracted();
+            // Notify if distracted - only when actively working on a task
+            if (currentTodoId && focusData.attention < 40) notifyDistracted();
 
           chrome.runtime.sendMessage({ action: 'updateFocusData', data: focusData })
             .catch(() => {
