@@ -5,6 +5,9 @@
 }
 
 .pixel-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     text-align: center;
     font-family:'Minecraft';
     color: white;
@@ -491,6 +494,137 @@ body {
   background: rgba(0, 0, 0, 0.3);
 }
 
+.pomodoro-timer {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.pomodoro-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.pomodoro-display.work {
+  border-left: 4px solid #667eea;
+}
+
+.pomodoro-display.break {
+  border-left: 4px solid #10b981;
+}
+
+.pomodoro-time {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: #333;
+}
+
+.pomodoro-type {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.pomodoro-btn {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  min-width: 44px;
+}
+
+.pomodoro-btn:hover {
+  background: white;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pomodoro-btn:active {
+  transform: scale(0.95);
+}
+
+.pomodoro-btn.skip-btn {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+}
+
+.pomodoro-btn.skip-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.pomodoro-count {
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+}
+
+/* Blink Metrics Styles */
+.blink-metrics {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(147, 197, 253, 0.2);
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.blink-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.blink-metric:last-child {
+  margin-bottom: 0;
+}
+
+.blink-label {
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.blink-value {
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.blink-warning {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #dc2626;
+  text-align: center;
+  font-weight: 600;
+}
+
 .snackbar {
   position: fixed;
   bottom: 20px;
@@ -526,4 +660,39 @@ body {
   to {
     opacity: 0;
   }
+}
+
+.category-progress-container {
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: -8px;
+}
+
+.category-progress-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.progress-label {
+  font-size: 12px;
+  margin-bottom: 2px;
+  text-align: left;
+  color: #d9d9d9;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #3a3a3a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #22c55e);
+  transition: width 0.4s ease;
 }
