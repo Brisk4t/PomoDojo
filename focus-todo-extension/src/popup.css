@@ -5,6 +5,9 @@
 }
 
 .pixel-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     text-align: center;
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     color: white;
@@ -15,6 +18,7 @@
     border-radius: 10px;
     padding: 10px 10px 10px;
     letter-spacing: 2px;
+    margin-bottom: 10px;
 
 }
 
@@ -465,6 +469,94 @@ body::before {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+.pomodoro-timer {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.pomodoro-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.pomodoro-display.work {
+  border-left: 4px solid #667eea;
+}
+
+.pomodoro-display.break {
+  border-left: 4px solid #10b981;
+}
+
+.pomodoro-time {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: #333;
+}
+
+.pomodoro-type {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.pomodoro-btn {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  min-width: 44px;
+}
+
+.pomodoro-btn:hover {
+  background: white;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pomodoro-btn:active {
+  transform: scale(0.95);
+}
+
+.pomodoro-btn.skip-btn {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+}
+
+.pomodoro-btn.skip-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.pomodoro-count {
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
 }
 
 .snackbar {
