@@ -11,6 +11,7 @@ function App() {
   const [spriteBase, setSpriteBase] = useState('');
   const [shakingTodoId, setShakingTodoId] = useState(null);
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   const categories = ['Eating', 'Exercising', 'Focus', 'Sleeping'];
 
@@ -67,6 +68,10 @@ function App() {
     return () => chrome.runtime.onMessage.removeListener(handler);
   }, []);
 
+  // Pomodoro constants (in seconds)
+  const POMODORO_WORK_TIME = 25 * 60; // 25 minutes
+  const POMODORO_BREAK_TIME = 5 * 60; // 5 minutes
+
   // Add new todo
   const addTodo = () => {
     if (!input.trim()) return;
@@ -77,6 +82,10 @@ function App() {
       category: selectedCategory,
       createdAt: new Date().toISOString(),
       attentionData: [],
+      pomodoroTime: POMODORO_WORK_TIME,
+      pomodoroRunning: false,
+      pomodoroType: 'work',
+      pomodoroCount: 0,
     };
     setTodos([todo, ...todos]);
     setInput('');
@@ -101,8 +110,14 @@ function App() {
 
     if (newState === 'doing' && todo.state !== 'doing') {
       chrome.runtime.sendMessage({ action: 'startTracking', todoId: id });
+      // Auto-start pomodoro timer when task is set to "doing"
+      setTodos(todos.map(t => t.id === id ? { ...t, state: newState, pomodoroRunning: true } : t));
+      return;
     } else if (newState !== 'doing' && todo.state === 'doing') {
       chrome.runtime.sendMessage({ action: 'stopTracking', todoId: id });
+      // Stop pomodoro timer when task is no longer "doing"
+      setTodos(todos.map(t => t.id === id ? { ...t, state: newState, pomodoroRunning: false } : t));
+      return;
     }
 
     setTodos(todos.map(t => t.id === id ? { ...t, state: newState } : t));
@@ -111,6 +126,55 @@ function App() {
   // Delete todo
   const deleteTodo = (id) => {
     setTodos(todos.filter(t => t.id !== id));
+  };
+
+  // Skip break - switch back to work immediately
+  const skipBreak = (id) => {
+    setTodos(todos.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          pomodoroType: 'work',
+          pomodoroTime: POMODORO_WORK_TIME,
+          pomodoroRunning: true,
+        };
+      }
+      return t;
+    }));
+  };
+
+  // Timer countdown effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+      setTodos(prevTodos => prevTodos.map(todo => {
+        if (todo.pomodoroRunning && todo.pomodoroTime > 0) {
+          const newTime = todo.pomodoroTime - 1;
+          if (newTime === 0) {
+            // Timer finished - auto switch to break or work and keep running
+            const newType = todo.pomodoroType === 'work' ? 'break' : 'work';
+            return {
+              ...todo,
+              pomodoroTime: newType === 'work' ? POMODORO_WORK_TIME : POMODORO_BREAK_TIME,
+              pomodoroType: newType,
+              pomodoroRunning: true, // Keep timer running
+              pomodoroCount: newType === 'work' ? todo.pomodoroCount : todo.pomodoroCount + 1,
+            };
+          }
+          return { ...todo, pomodoroTime: newTime };
+        }
+        return todo;
+      }));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [POMODORO_WORK_TIME, POMODORO_BREAK_TIME]);
+
+  // Format time for display
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const filteredTodos = todos.filter(t => filter === 'all' || t.state === filter);
@@ -211,10 +275,29 @@ function App() {
                     {getCategoryEmoji(todo.category)} {todo.category}
                   </span>
                 )}
+                {todo.state === 'doing' && (
+                  <div className="pomodoro-timer">
+                    <div className={`pomodoro-display ${todo.pomodoroType}`}>
+                      <span className="pomodoro-time">{formatTime(todo.pomodoroTime || 0)}</span>
+                      <span className="pomodoro-type">{todo.pomodoroType === 'work' ? '🎯 Focus' : '☕ Break'}</span>
+                    </div>
+                    {todo.pomodoroType === 'break' && (
+                      <div className="pomodoro-controls">
+                        <button
+                          className="pomodoro-btn skip-btn"
+                          onClick={() => skipBreak(todo.id)}
+                          title="Skip Break"
+                        >
+                          ⏭ Skip Break
+                        </button>
+                      </div>
+                    )}
+                    <div className="pomodoro-count">
+                      Pomodoros: {todo.pomodoroCount || 0}
+                    </div>
+                  </div>
+                )}
               </div>
-              {todo.state === 'doing' && (
-                <div className="todo-attention">📊 N/A</div>
-              )}
               <div className="todo-actions">
                 <button className="todo-btn delete-btn" onClick={() => deleteTodo(todo.id)}>×</button>
               </div>
