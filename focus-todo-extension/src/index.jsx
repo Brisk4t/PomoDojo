@@ -279,6 +279,21 @@ function App() {
                       <span className="pomodoro-time">{formatTime(todo.pomodoroTime || 0)}</span>
                       <span className="pomodoro-type">{todo.pomodoroType === 'work' ? '🎯 Focus' : '☕ Break'}</span>
                     </div>
+                    {focusData.blinks && (
+                      <div className="blink-metrics">
+                        <div className="blink-metric">
+                          <span className="blink-label">👁️ Blinks:</span>
+                          <span className="blink-value">{focusData.blinks.rate}/min</span>
+                        </div>
+                        <div className="blink-metric">
+                          <span className="blink-label">EAR:</span>
+                          <span className="blink-value">{focusData.blinks.ear.toFixed(2)}</span>
+                        </div>
+                        {!focusData.blinks.face_detected && (
+                          <div className="blink-warning">⚠️ No face detected</div>
+                        )}
+                      </div>
+                    )}
                     {todo.pomodoroType === 'break' && (
                       <div className="pomodoro-controls">
                         <button

@@ -559,6 +559,49 @@ body::before {
   font-weight: 600;
 }
 
+/* Blink Metrics Styles */
+.blink-metrics {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(147, 197, 253, 0.2);
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.blink-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.blink-metric:last-child {
+  margin-bottom: 0;
+}
+
+.blink-label {
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.blink-value {
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.blink-warning {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #dc2626;
+  text-align: center;
+  font-weight: 600;
+}
+
 .snackbar {
   position: fixed;
   bottom: 20px;
