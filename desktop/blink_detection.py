@@ -14,6 +14,8 @@ import cv2
 from collections import deque
 from typing import Callable, Dict, Any, Optional
 import threading
+import os
+from pathlib import Path
 
 
 def eye_aspect_ratio(eye):
@@ -39,7 +41,7 @@ def eye_aspect_ratio(eye):
 def stream_blinks(
     callback: Callable[[Dict[str, Any]], None],
     stop_event: Optional[threading.Event] = None,
-    shape_predictor_path: str = "Eye-Blink-Detection/shape_predictor_68_face_landmarks.dat",
+    shape_predictor_path: str = "../Eye-Blink-Detection/shape_predictor_68_face_landmarks.dat",
     ear_threshold: float = 0.25,
     consec_frames: int = 4,
     update_every: float = 1.0
