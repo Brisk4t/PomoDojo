@@ -9,7 +9,8 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
-    clean: true
+    clean: true,
+    assetModuleFilename: 'assets/[hash][ext][query]'
   },
   module: {
     rules: [
@@ -26,6 +27,20 @@ module.exports = {
       {
         test: /\.css$/,
         use: ['style-loader', 'css-loader']
+      },
+      {
+        test: /\.(ttf|woff|woff2|eot|otf)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'font/[name][ext]'
+        }
+      },
+      {
+        test: /\.(png|jpg|jpeg|gif|svg)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'images/[name][ext]'
+        }
       }
     ]
   },
@@ -38,3 +53,4 @@ module.exports = {
     hot: false
   }
 };
+
